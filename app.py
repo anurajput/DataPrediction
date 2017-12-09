@@ -5,6 +5,8 @@ import os
 import traceback
 from utils import sleep_timer, log
 from prediction import InventoryPredictor
+from models import Inventory, db, sessionmaker
+
 
 predictor = InventoryPredictor()
 
@@ -51,6 +53,12 @@ class Parser:
                 #                            csv_data[4], csv_data[5],
                 #                            csv_data[6], csv_data[7],
                 #                            csv_data[8], csv_data[9])
+                inventory = Inventory(id, csv_data[0], csv_data[1],
+                                      csv_data[2], csv_data[3],
+                                      csv_data[4], csv_data[5],
+                                      csv_data[6], csv_data[7],
+                                      csv_data[8], csv_data[9])
+
                 cnt += 1
 
         except Exception as exp:
