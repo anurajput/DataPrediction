@@ -19,3 +19,7 @@ def sleep_timer(file_name):
     print("\n\n[%s] :: SLEEPING FOR %d seconds.....\n\n" % (file_name, val))
     time.sleep(val)
     print("\n\n[%s] :: RESUMED \n\n" % file_name)
+
+
+def log(tag, method_name, msg):
+        print('[%s] :: %s :: %s' % (tag, method_name, msg))
