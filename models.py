@@ -16,7 +16,7 @@ class Inventory(base):
 
     __tablename__ = 'inventory'
 
-    id = Column(Integer, primary_key=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
     item = Column(String(200))
     description = Column(String(200))
     status = Column(String(200))
@@ -28,9 +28,8 @@ class Inventory(base):
     retail = Column(String(200))
     pricing = Column(String(200))
 
-    def __init__(self, id, item, description, status, sty_avail, qty,
+    def __init__(self, item, description, status, sty_avail, qty,
                  available, qty_, available_, retail, pricing):
-        self.id = id
         self.item = item
         self.description = description
         self.status = status
@@ -41,6 +40,9 @@ class Inventory(base):
         self.available_ = available_
         self.retail = retail
         self.pricing = pricing
+
+    def __repr__(self):
+        return "<Inventory> item: %s" % self.item
 
     @property
     def serialize(self):
@@ -60,12 +62,16 @@ class Inventory(base):
             'pricing': self.pricing
         }
 
+
+def get_session():
+    Session = sessionmaker(db)
+    session = Session()
+    return session
+
 def setup_db():
     try:
-        Session = sessionmaker(db)
-        session = Session()
         base.metadata.create_all(db)
-        print("Database Create Successfull")
+        print("Database Created Successfully")
     except Exception as exp:
         print("Failed to create database, got exception: \n%s" % exp)
 
