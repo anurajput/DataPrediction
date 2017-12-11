@@ -3,7 +3,10 @@ import threading
 import traceback
 from os import listdir
 from os.path import isfile, join
+import pandas as pd
+import shutil
 
+from models import Inventory, get_session
 from config import CSV_DIR, PROCESSED_CSV_DIR, INGEST_SLEEP
 
 
@@ -22,11 +25,26 @@ class Ingest(threading.Thread):
     def _log(self, msg):
         print "[Ingest] :: %s" % msg
 
-    def process_csv_files(self, csv_files):
+    def process_csv_file(self, csv):
         try:
-            for csv in csv_files:
-                self._log("Processing csv: %s" % csv)
+            self._log("Processing csv: %s" % csv)
+            df = pd.read_csv(csv, header=None) 
+            #print df
 
+            session = get_session()
+            for index, row in df.iterrows():
+                print index, row[0]
+
+                inv = Inventory(row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7], row[8], row[9])
+                print "Inventory = %s" % inv
+                session.add(inv)
+                session.commit()
+                session.flush()
+            session.close()
+
+            dest = PROCESSED_CSV_DIR
+            print "Moving %s -> %s" % (csv, PROCESSED_CSV_DIR)
+            shutil.move(csv, PROCESSED_CSV_DIR)
         except Exception as exp:
             print exp
 
@@ -39,6 +57,9 @@ class Ingest(threading.Thread):
                 self._log("Watching CSV files to be processed")
                 csv_files = ["%s/%s" % (CSV_DIR, f) for f in listdir(CSV_DIR) if isfile(join(CSV_DIR, f))]
                 self._log(csv_files)
+
+                for csv in csv_files:
+                    self.process_csv_file(csv)
 
             except Exception as exp:
                 print exp
