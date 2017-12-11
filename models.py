@@ -60,12 +60,14 @@ class Inventory(base):
             'pricing': self.pricing
         }
 
-    Session = sessionmaker(db)
-    session = Session()
+def setup_db():
+    try:
+        Session = sessionmaker(db)
+        session = Session()
+        base.metadata.create_all(db)
+        print("Database Create Successfull")
+    except Exception as exp:
+        print("Failed to create database, got exception: \n%s" % exp)
 
 if __name__ == '__main__':
-    try:
-        base.metadata.create_all(db)
-        print('================= [db created] ======================')
-    except:
-        print('================= [db not created] ==================')
+    setup_db()
