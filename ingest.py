@@ -56,7 +56,7 @@ class Ingest(threading.Thread):
 
                 self._log("Watching CSV files to be processed")
                 csv_files = ["%s/%s" % (CSV_DIR, f) for f in listdir(CSV_DIR) if isfile(join(CSV_DIR, f))]
-                self._log(csv_files)
+                self._log("CSV Found: %s" % csv_files)
 
                 for csv in csv_files:
                     self.process_csv_file(csv)
