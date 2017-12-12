@@ -1,0 +1,1 @@
+export PYTHONPATH=/home/neo/work/anurajput/ProjDataPrediction/DataPrediction
