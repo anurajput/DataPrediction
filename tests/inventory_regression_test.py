@@ -1,8 +1,16 @@
 import pandas as pd
 import quandl
 
-df = quandl.get('WIKI/GOOGL')
 
+class InventoryRegressonTest:
+
+    csv = "inventory.csv"
+    def __init__(self):
+
+        df = pd.read_csv(self.csv, header=None) 
+        print df
+
+"""
 df = df[[
     'Adj. Open',
     'Adj. High',
@@ -23,3 +31,7 @@ df = df[[
 
 #print df
 print df.head()
+"""
+
+if __name__ == "__main__":
+    irt = InventoryRegressonTest()
