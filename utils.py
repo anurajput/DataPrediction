@@ -23,3 +23,16 @@ def sleep_timer(file_name):
 
 def log(tag, method_name, msg):
         print('[%s] :: %s :: %s' % (tag, method_name, msg))
+
+def get_date_from_filename(csv):
+    sub = csv.split('.')
+    x = sub[0]
+    date = x[-8:]
+    year = date[:4]
+    month = date[4:-2]
+    day = date[-2:]
+    return "%s-%s-%s" % (year, month, day)
+
+
+if __name__ == "__main__":
+    print get_date_from_filename("abc20171213")
