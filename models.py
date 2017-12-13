@@ -20,13 +20,13 @@ class Inventory(base):
     item = Column(String(200))
     description = Column(String(200))
     status = Column(String(200))
-    sty_avail = Column(String(200))
-    qty = Column(String(200))
-    available = Column(String(200))
-    qty_ = Column(String(200))
-    available_ = Column(String(200))
-    retail = Column(String(200))
-    pricing = Column(String(200))
+    sty_avail = Column(Integer)
+    qty = Column(Integer)
+    available = Column(Integer)
+    qty_ = Column(Integer)
+    available_ = Column(Integer)
+    retail = Column(Integer)
+    pricing = Column(Integer)
 
     def __init__(self, item, description, status, sty_avail, qty,
                  available, qty_, available_, retail, pricing):
@@ -67,6 +67,7 @@ def get_session():
     Session = sessionmaker(db)
     session = Session()
     return session
+
 
 def setup_db():
     try:
