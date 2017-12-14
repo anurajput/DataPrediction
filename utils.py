@@ -6,6 +6,8 @@ SLEEP_MIN = 1  # in seconds
 SLEEP_MAX = 5  # in seconds
 
 
+
+
 def get_rand_in_range(min, max):
     return randint(min, max)
 
@@ -32,6 +34,12 @@ def get_date_from_filename(csv):
     month = date[4:-2]
     day = date[-2:]
     return "%s-%s-%s" % (year, month, day)
+
+def smart_int(s):
+    try:
+        return int(s)
+    except:
+        return 0
 
 
 if __name__ == "__main__":

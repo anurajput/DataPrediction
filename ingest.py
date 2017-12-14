@@ -5,7 +5,7 @@ from os import listdir
 from os.path import isfile, join
 import pandas as pd
 import shutil
-
+from utils import smart_int
 from models import Inventory, get_session
 from config import CSV_DIR, PROCESSED_CSV_DIR, INGEST_SLEEP
 
@@ -35,7 +35,7 @@ class Ingest(threading.Thread):
             for index, row in df.iterrows():
                 print index, row[0]
 
-                inv = Inventory(row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7], row[8], row[9])
+                inv = Inventory(row[0], row[1], row[2], smart_int(row[3]), smart_int(row[4]), smart_int(row[5]), smart_int(row[6]), smart_int(row[7]), smart_int(row[8]), smart_int(row[9]))
                 print "Inventory = %s" % inv
                 session.add(inv)
                 session.commit()

@@ -5,7 +5,9 @@ import os
 import traceback
 from utils import sleep_timer, log
 from prediction import InventoryPredictor
-from models import Inventory, db, sessionmaker
+from models import Inventory, get_session, base
+
+import psycopg2
 
 
 predictor = InventoryPredictor()
@@ -53,7 +55,7 @@ class Parser:
                 #                            csv_data[4], csv_data[5],
                 #                            csv_data[6], csv_data[7],
                 #                            csv_data[8], csv_data[9])
-                inventory = Inventory(id, csv_data[0], csv_data[1],
+                inventory = Inventory(csv_data[0], csv_data[1],
                                       csv_data[2], csv_data[3],
                                       csv_data[4], csv_data[5],
                                       csv_data[6], csv_data[7],
@@ -65,10 +67,22 @@ class Parser:
             log(self.tag, method_name, 'Got Exception: %s' % exp)
             log(self.tag, method_name, traceback.format_exc())
 
+    def get_data(self):
+
+        con = psycopg2.connect("host='localhost' dbname='amz_inv_db' user='amz_inv' password=123")
+        cur = con.cursor()
+        cur.execute("SELECT * FROM inventory")
+        for data in cur.fetchall():
+            print '', data
+        
+        # data = Inventory.fetchall()
+        # print '', data
+
 
 if __name__ == '__main__':
     parser = Parser()
-    csv = os.listdir('./docs/csv_files')
-    for file in csv:
-        parser.csv_parser("./docs/csv_files/%s" % file)
-        sleep_timer(file)
+    # csv = os.listdir('./docs/csv_files')
+    # for file in csv:
+    #     parser.csv_parser("./docs/csv_files/%s" % file)
+    #     sleep_timer(file)
+    parser.get_data()
