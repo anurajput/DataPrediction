@@ -11,7 +11,29 @@ db_url = "postgres://amz_inv:123@localhost/amz_inv_db"
 db = create_engine(db_url)
 base = declarative_base()
 
-
+########################################################################################
+#
+#  HowardMiller
+#  A - model_number
+#  B - stock_qty
+#  C - next_available_date
+#  D - next_qty
+#  E - prod_date
+#  F - prod_quantity
+#
+#  Hekman
+#  A - model_number
+#  B - description
+#  C - supply_for_days
+#  D - available_qty
+#  E - next_produce_qty
+#  F - next_produce_date
+#  G - next_schedule_produce_qty
+#  H - next_schedule_produce_date
+#  I - retail
+#  J - pricing
+# 
+########################################################################################
 class Inventory(base):
 
     __tablename__ = 'inventory'

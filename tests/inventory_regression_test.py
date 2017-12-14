@@ -8,19 +8,12 @@ class InventoryRegressonTest:
     def __init__(self):
 
         df = pd.read_csv(self.csv, header=None) 
-        print df
+
+        #df = df[['Item#','Description','Status','Qty Avail','Qty','Available','Qty','Available','Retail','Pricing']]
+        print df.head()
 
 """
-df = df[[
-    'Adj. Open',
-    'Adj. High',
-    'Adj. Low',
-    'Adj. Close',
-    'Adj. Volume',
-        ]]
-
-df['HL_PCT'] = (df['Adj. High'] - df['Adj. Low'])/ df['Adj. Low'] * 100.0
-df['PCT_change'] = (df['Adj. Close'] - df['Adj. Open'])/ df['Adj. Open'] * 100.0
+        df['HL_PCT'] = (df['Adj. High'] - df['Adj. Low'])/ df['Adj. Low'] * 100.0
 
 df = df[[
     'Adj. Close',
