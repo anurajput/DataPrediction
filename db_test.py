@@ -35,6 +35,5 @@ def create_hekman():
         print("create_hekman() got exception: \n%s" % exp)
         print (traceback.format_exc())
 
-
 create_hekman()
 
