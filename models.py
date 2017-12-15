@@ -68,7 +68,7 @@ class Hekman(base):
         self.pricing = pricing
 
     def __repr__(self):
-        return "<Hekman> model_number: %s" % self.model_number
+        return "<Hekman> %s - %d" % (self.model_number, self.pricing)
 
 
 class HowardMiller(base):

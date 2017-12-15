@@ -39,7 +39,7 @@ class IngestHowardMiller(threading.Thread):
                 howard_miller = HowardMiller(row[0], smart_int(row[1]), row[2],
                                             smart_int(row[3]), row[4],
                                             smart_int(row[5]))
-                self._log("IngestHowardMiller = %s" % howard_miller)
+                self._log(howard_miller)
                 session.add(howard_miller)
                 session.commit()
                 session.flush()

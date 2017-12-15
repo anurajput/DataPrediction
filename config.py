@@ -1,7 +1,5 @@
 import os
 
-# export AMAZON_INVENTORY_DIR="/home/ted/work/DataPrediction/"
-
 ROOT_DIR = os.environ['AMAZON_INVENTORY_DIR']
 
 assert (ROOT_DIR, "AMAZON_INVENTORY_DIR is not defined")

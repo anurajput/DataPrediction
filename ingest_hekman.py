@@ -28,7 +28,7 @@ class IngestHekman(threading.Thread):
     def process_csv_file(self, csv):
         try:
             # _log("Processing csv: %s" % csv)
-            df = pd.read_csv(csv, header=None)
+            df = pd.read_csv(csv, header=None, skiprows=[0])
             # print df
 
             session = get_session()
@@ -38,7 +38,7 @@ class IngestHekman(threading.Thread):
                 hekman = Hekman(row[0], row[1], row[2], smart_int(row[3]),
                                 smart_int(row[4]), row[5], smart_int(row[6]),
                                 row[7], smart_int(row[8]), smart_int(row[9]))
-                self._log("Hekman = %s" % hekman)
+                self._log(hekman)
                 session.add(hekman)
                 session.commit()
                 session.flush()
