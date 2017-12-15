@@ -29,7 +29,7 @@ class IngestHowardMiller(threading.Thread):
     def process_csv_file(self, csv):
         try:
             # _log("Processing csv: %s" % csv)
-            df = pd.read_csv(csv, header=None)
+            df = pd.read_csv(csv, header=None,  skiprows=[0])
             # print df
 
             session = get_session()
