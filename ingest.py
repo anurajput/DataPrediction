@@ -46,7 +46,8 @@ class Ingest(threading.Thread):
             print "Moving %s -> %s" % (csv, PROCESSED_CSV_DIR)
             shutil.move(csv, PROCESSED_CSV_DIR)
         except Exception as exp:
-            print exp
+            print '[Ingest] :: process_csv_file() :: Got Exception: %s' % exp
+            print(traceback.format_exc())
 
     def run(self):
         while True:
@@ -62,7 +63,8 @@ class Ingest(threading.Thread):
                     self.process_csv_file(csv)
 
             except Exception as exp:
-                print exp
+                print '[Ingest] :: run() :: Got exception: %s' % exp
+                print(traceback.format_exc())
 
 
 if __name__ == "__main__":
