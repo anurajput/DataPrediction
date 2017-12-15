@@ -1,7 +1,7 @@
 #
 # script for various ORM models for project
 #
-
+import traceback
 from sqlalchemy import Column, Integer, String
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
@@ -34,6 +34,8 @@ base = declarative_base()
 #  J - pricing
 # 
 ########################################################################################
+
+
 class Hekman(base):
 
     __tablename__ = 'hekman'
@@ -108,57 +110,6 @@ class HowardMiller(base):
         }
 
 
-class Inventory(base):
-
-    __tablename__ = 'inventory'
-
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    item = Column(String(200))
-    description = Column(String(200))
-    status = Column(String(200))
-    sty_avail = Column(Integer)
-    qty = Column(Integer)
-    available = Column(Integer)
-    qty_ = Column(Integer)
-    available_ = Column(Integer)
-    retail = Column(Integer)
-    pricing = Column(Integer)
-
-    def __init__(self, item, description, status, sty_avail, qty,
-                 available, qty_, available_, retail, pricing):
-        self.item = item
-        self.description = description
-        self.status = status
-        self.sty_avail = sty_avail
-        self.qty = qty
-        self.available = available
-        self.qty_ = qty_
-        self.available_ = available_
-        self.retail = retail
-        self.pricing = pricing
-
-    def __repr__(self):
-        return "<Inventory> item: %s" % self.item
-
-    @property
-    def serialize(self):
-
-        #  Return object data in easily serializeable format
-        return {
-            'id': self.id,
-            'item': self.item,
-            'description': self.description,
-            'status': self.status,
-            'sty_avail': self.sty_avail,
-            'qty': self.qty,
-            'available': self.available,
-            'qty_': self.qty_,
-            'available_': self.available_,
-            'retail': self.retail,
-            'pricing': self.pricing
-        }
-
-
 def get_session():
     Session = sessionmaker(db)
     session = Session()
@@ -171,6 +122,7 @@ def setup_db():
         print("Database Created Successfully")
     except Exception as exp:
         print("Failed to create database, got exception: \n%s" % exp)
+        print(traceback.format_exc())
 
 if __name__ == '__main__':
     setup_db()
