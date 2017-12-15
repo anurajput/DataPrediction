@@ -1,0 +1,1 @@
+export AMAZON_INVENTORY_DIR=""
