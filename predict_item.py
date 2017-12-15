@@ -26,6 +26,7 @@ class PredictItem:
     def __init__(self, model_number):
         self.model_number = model_number
         self.df = None
+        self.clf = None
 
     def _log(self, msg):
         print "[PredictItem] :: %s" % msg
@@ -41,6 +42,7 @@ class PredictItem:
 
         # query all records by model_number
         result_set = session.query(Hekman).all()
+        #result_set = session.query(Hekman).filter(Hekman.model_number == model_number).all()
 
         # NOTE: dataframe will not well be ordered (e.g. 'id' is not the first)
         df = pd.DataFrame(query_to_dict(result_set))
@@ -54,6 +56,8 @@ class PredictItem:
         print(self.df)
 
     def create_classifier(self):
+        self._log("defining classifier and training it")
+
         forecast_col = 'available_qty'
         forecast_out = int( math.ceil( 0.1 * len(self.df) ) )
 
@@ -72,15 +76,21 @@ class PredictItem:
 
         X_train, X_test, y_train, y_test = cross_validation.train_test_split(X, y, test_size=0.2)
 
-        #clf = LinearRegression()
-        clf = svm.SVR()
-        #clf = svm.SVR(kernel='poly') # defualt kernel is linear
-        #clf = LinearRegression(n_jobs=10)
-        #clf = LinearRegression()
+        clf = LinearRegression()
+        #clf = svm.SVR()
         clf.fit(X_train, y_train)
         accuracy = clf.score(X_test, y_test)
 
         print "accuracy:", accuracy
+
+        self.clf = clf
+        self._log("classifier created and trained")
+
+        #FIXME - not sure if need to serialize this classifier,
+        #in order to save time of training the classifier for each prediction of this item
+
+    def predict_data(self):
+        pass
 
     def forecast(self):
 
@@ -89,13 +99,8 @@ class PredictItem:
         assert len(self.df), "Forecast cant be made without some data in dataframe"
 
         # step-2: # define classifier, train it
-        self._log("defining classifier and training it")
         self.create_classifier()
-        
-        
-        #FIXME - not sure if need to serialize this classifier,
-        #in order to save time of training the classifier for each prediction of this item
-        
+        assert self.clf, "Forecast cant be made without a classifier"
         
         # step - 5
         # predict the data for given time range, days/months etc
