@@ -47,7 +47,9 @@ df['label'] = df[forecast_col].shift(-forecast_out)
 print df.head()
 print df.tail()
 
-X = np.array(df.drop(['label'], 1))
+# Return new object with labels in requested axis removed
+X = np.array(df.drop(['label'], 1)) # axis=1
+
 X = preprocessing.scale(X)
 X = X[:-forecast_out]
 X_lately = X[-forecast_out:]
@@ -56,6 +58,15 @@ df.dropna(inplace=True)
 
 y = np.array(df['label'])
 
+"""
+Split arrays or matrices into random train and test subsets
+
+test_size : float, int, or None (default is None)
+    If float, should be between 0.0 and 1.0 and represent the proportion of the dataset to include in the test split. 
+    If int, represents the absolute number of test samples. 
+    If None, the value is automatically set to the complement of the train size. 
+    If train size is also None, test size is set to 0.25.
+"""
 X_train, X_test, y_train, y_test = cross_validation.train_test_split(X, y, test_size=0.2)
 
 #clf = LinearRegression()
