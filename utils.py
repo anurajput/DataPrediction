@@ -90,6 +90,10 @@ def days_left_for_next_produce(next_produce_date, date, supply_for_days):
         print "[WARNING] :: days_left_for_next_produce(%s -> %s) got exception: %s" % (next_produce_date, date, exp)
         return supply_for_days
 
+def date_from_str(s):
+    date_format = '%Y-%m-%d'
+    return datetime.strptime(s, date_format)  
+
 
 if __name__ == "__main__":
     #print "Date from filename is:", get_date_from_filename("20171213")

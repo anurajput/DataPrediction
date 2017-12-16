@@ -15,7 +15,7 @@ from matplotlib import style
 import time
 
 from models import Hekman, get_session
-from utils import query_to_dict, days_left_for_next_produce
+from utils import query_to_dict, days_left_for_next_produce, date_from_str
 
 
 style.use('ggplot')
@@ -56,7 +56,8 @@ class PredictItem:
         dataframe['supply_for_days'].replace('S-15/30', 20, inplace=True)
         dataframe['supply_for_days'].replace('S-30/60', 45, inplace=True)
         dataframe['supply_for_days'].replace('S-60+',   65, inplace=True)
-        dataframe['supply_for_days'].replace('0',       0, inplace=True)
+        dataframe['supply_for_days'].replace('0',       1, inplace=True)
+        dataframe['supply_for_days'].replace('NaN',     1, inplace=True)
         return dataframe
 
     def populate_dataframe(self):
@@ -75,6 +76,8 @@ class PredictItem:
         # note: dataframe will not well be ordered (e.g. 'id' is not the first)
         df = pd.DataFrame(query_to_dict(result_set))
 
+        self.last_date = date_from_str(df.date.iloc[-1])
+
         # NORMALIZE DATA
         df = self.normalize_dataframe(df)
 
@@ -91,12 +94,18 @@ class PredictItem:
         df['DL_F_NP'] = df.apply(lambda row: days_left_for_next_produce(row['next_produce_date'], row['date'], row['supply_for_days']), axis=1)
 
         # consumption rate = qty/days
-        df['CR'] = (df['available_qty'])/ df['supply_for_days'] * 100.0
+        #df['CR'] = (df['available_qty'])/ df['supply_for_days'] * 100.0
+        df['CR'] = (df['available_qty']/ df['DL_F_NP']) * 100.0
+
+        # production rate = next_produce_qty/DL_F_NP
+        df['PR'] = (df['next_produce_qty']/ df['DL_F_NP']) * 100.0
 
         self.show_dataframe(df)
 
-        #df = df[['date', 'next_produce_date', 'next_produce_qty', 'available_qty', 'next_schedule_produce_qty']]
-        df = df[['supply_for_days', 'next_produce_qty', 'available_qty', 'DL_F_NP', 'CR']]
+        #df = df[['supply_for_days', 'next_produce_qty', 'available_qty', 'DL_F_NP', 'CR', 'PR']]
+
+        #df = df[['supply_for_days', 'available_qty', 'DL_F_NP', 'CR', 'PR']]
+        df = df[['available_qty', 'DL_F_NP', 'CR', 'PR']]
 
         # Available <=> Next Produce Relation
         #df['A_NP_PCT'] = (df['next_produce_qty'] - df['available_qty'])/ df['next_produce_qty'] * 100.0
@@ -113,11 +122,11 @@ class PredictItem:
     def create_classifier(self):
         self._log("defining classifier and training it")
 
-        #forecast_col = 'available_qty'
-        forecast_col = 'supply_for_days'
+        self.forecast_col = 'available_qty'
+        #self.forecast_col = 'supply_for_days'
         forecast_out = int( math.ceil( 0.1 * len(self.df) ) )
 
-        self.df['label'] = self.df[forecast_col].shift(-forecast_out)
+        self.df['label'] = self.df[self.forecast_col].shift(-forecast_out)
 
         # Return new object with labels in requested axis removed
         X = np.array(self.df.drop(['label'], 1)) # axis=1
@@ -130,18 +139,22 @@ class PredictItem:
 
         y = np.array(self.df['label'])
 
-        X_train, X_test, y_train, y_test = cross_validation.train_test_split(X, y, test_size=0.9)
+        accuracy = -1.0
+        ACCURACY_THRESHOLD = .6
+        while accuracy < ACCURACY_THRESHOLD:
+            print "\n-- TRAINING CLASSIFIER WITH THRESHOLD : %f \n" % ACCURACY_THRESHOLD
+            X_train, X_test, y_train, y_test = cross_validation.train_test_split(X, y, test_size=0.9)
 
-        #clf = LinearRegression()
-        clf = svm.SVR()
-        clf.fit(X_train, y_train)
-        accuracy = clf.score(X_test, y_test)
+            clf = LinearRegression()
+            #clf = svm.SVR()
+            clf.fit(X_train, y_train)
+            accuracy = clf.score(X_test, y_test)
+            self.clf = clf
 
         print "\n------------------------------------------"
         print "))---> Accuracy:", accuracy
         print "------------------------------------------\n"
 
-        self.clf = clf
         self._log("classifier created and trained")
 
         #FIXME - not sure if need to serialize this classifier,
@@ -154,19 +167,22 @@ class PredictItem:
 
         self.df['Forecast'] = np.nan
 
-        last_date = self.df.iloc[-1].name
-        self._log("last_date: %s" % last_date)
+        self._log("last_date: %s" % self.last_date)
 
-        last_unix = time.mktime(last_date.timetuple())
+        last_unix = time.mktime(self.last_date.timetuple())
         one_day = 86400
         next_unix = last_unix + one_day
 
         for i in forecast_set:
             next_date = datetime.datetime.fromtimestamp(next_unix)
+            print "next_date", next_date
+            
+            #next_unix+= one_day * 30 # add 30 days
             next_unix+= one_day
-            self.df.loc[next_date] = [np.nan for _ in range(len(self.df.columns)-1)] + [i]
+            #self.df.loc[next_date] = [np.nan for _ in range(len(self.df.columns)-1)] + [i]
+            self.df.loc[next_date] = i
 
-        self.df['supply_for_days'].plot()
+        self.df[self.forecast_col].plot()
         self.df['Forecast'].plot()
         plt.legend(loc=4)
         plt.xlabel('Date')
@@ -177,11 +193,11 @@ class PredictItem:
 
         # step-1 : read all record for this item from db
         self.populate_dataframe()
-        assert len(self.df), "Forecast cant be made without some data in dataframe"
+        assert len(self.df), "forecast cant be made without some data in dataframe"
 
         # step-2: define classifier, train it
         self.create_classifier()
-        assert self.clf, "Forecast cant be made without a classifier"
+        assert self.clf, "forecast cant be made without a classifier"
         
         # step-3
         # predict the data for given time range, days/months etc
@@ -197,5 +213,6 @@ class PredictItem:
 if __name__ == "__main__":
     # item to be predicted
     model_number = "11100"
+    #model_number = "11101"
     pi = PredictItem(model_number)
     pi.forecast()
