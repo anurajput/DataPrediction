@@ -64,7 +64,6 @@ def date_str(date):
     year = date[:4]
     month = date[4:-2]
     month_date = date[-2:]
-    print 'date : %s-%s-%s' % (year, month, month_date)
     return 'date : %s-%s-%s' % (year, month, month_date)
 
 
