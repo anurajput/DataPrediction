@@ -4,6 +4,7 @@ from sqlalchemy.inspection import inspect
 
 from random import randint
 import time
+from datetime import datetime
 
 
 SLEEP_MIN = 1  # in seconds
@@ -76,7 +77,21 @@ def smart_int(s):
     except:
         return 0
 
+def days_left_for_next_produce(next_produce_date, date, supply_for_days):
+    try:
+        if next_produce_date == "0":
+            return supply_for_days
+        date_format = '%Y-%m-%d'
+        s = datetime.strptime(date, date_format)  
+        e = datetime.strptime(next_produce_date, date_format)  
+        delta = e - s
+        return delta.days
+    except Exception as exp:
+        print "[WARNING] :: days_left_for_next_produce(%s -> %s) got exception: %s" % (next_produce_date, date, exp)
+        return supply_for_days
+
 
 if __name__ == "__main__":
-    print "Date from filename is:", get_date_from_filename("20171213")
-    print "Date str:", date_str("20171213")
+    #print "Date from filename is:", get_date_from_filename("20171213")
+    #print "Date str:", date_str("20171213")
+    print "Days delta:", days_delta('2017-12-11', '2017-12-20')

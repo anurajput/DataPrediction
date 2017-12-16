@@ -15,7 +15,7 @@ from matplotlib import style
 import time
 
 from models import Hekman, get_session
-from utils import query_to_dict
+from utils import query_to_dict, days_left_for_next_produce
 
 
 style.use('ggplot')
@@ -74,13 +74,9 @@ class PredictItem:
 
         # note: dataframe will not well be ordered (e.g. 'id' is not the first)
         df = pd.DataFrame(query_to_dict(result_set))
-        #df = df[['date', 'next_produce_date', 'next_produce_qty', 'available_qty', 'next_schedule_produce_qty']]
-        #df = df[['next_produce_qty', 'available_qty', 'next_schedule_produce_qty']]
-        df = df[['supply_for_days', 'next_produce_qty', 'available_qty']]
 
+        # NORMALIZE DATA
         df = self.normalize_dataframe(df)
-
-        #self.show_dataframe(df)
 
         ###############################
         #
@@ -88,15 +84,23 @@ class PredictItem:
         #
         ###############################
 
+        # relation-1
+        # days left for next production of item
+        # next_produce_date - date
+
+        df['DL_F_NP'] = df.apply(lambda row: days_left_for_next_produce(row['next_produce_date'], row['date'], row['supply_for_days']), axis=1)
+
         # consumption rate = qty/days
         df['CR'] = (df['available_qty'])/ df['supply_for_days'] * 100.0
+
+        self.show_dataframe(df)
+
+        #df = df[['date', 'next_produce_date', 'next_produce_qty', 'available_qty', 'next_schedule_produce_qty']]
+        df = df[['supply_for_days', 'next_produce_qty', 'available_qty', 'DL_F_NP', 'CR']]
 
         # Available <=> Next Produce Relation
         #df['A_NP_PCT'] = (df['next_produce_qty'] - df['available_qty'])/ df['next_produce_qty'] * 100.0
         #df['A_NP_PCT'] = (df['next_produce_qty'] - df['available_qty'])/ df['available_qty'] * 100.0
-
-        # Days left for next produce
-        #df['DL_NP'] = ???
 
         # we cant use NaN data, filling then with some default value
         #df.fillna(-99999, inplace=True)
@@ -128,12 +132,14 @@ class PredictItem:
 
         X_train, X_test, y_train, y_test = cross_validation.train_test_split(X, y, test_size=0.9)
 
-        clf = LinearRegression()
-        #clf = svm.SVR()
+        #clf = LinearRegression()
+        clf = svm.SVR()
         clf.fit(X_train, y_train)
         accuracy = clf.score(X_test, y_test)
 
+        print "\n------------------------------------------"
         print "))---> Accuracy:", accuracy
+        print "------------------------------------------\n"
 
         self.clf = clf
         self._log("classifier created and trained")
