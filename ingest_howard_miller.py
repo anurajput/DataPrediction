@@ -5,7 +5,7 @@ from os import listdir
 from os.path import isfile, join
 import pandas as pd
 import shutil
-from utils import smart_int
+from utils import smart_int, get_date_from_filename
 from models import HowardMiller, get_session
 from config import HOWARD_MILLER_CSV_DIR, \
     HOWARD_MILLER_PROCESSED_CSV_DIR, INGEST_SLEEP
@@ -31,12 +31,13 @@ class IngestHowardMiller(threading.Thread):
             # _log("Processing csv: %s" % csv)
             df = pd.read_csv(csv, header=None,  skiprows=[0])
             # print df
+            date = get_date_from_filename(csv)
 
             session = get_session()
             for index, row in df.iterrows():
                 print index, row[0]
 
-                howard_miller = HowardMiller(row[0], smart_int(row[1]), row[2],
+                howard_miller = HowardMiller(date, row[0], smart_int(row[1]), row[2],
                                             smart_int(row[3]), row[4],
                                             smart_int(row[5]))
                 self._log(howard_miller)

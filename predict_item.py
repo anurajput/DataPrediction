@@ -61,7 +61,8 @@ class PredictItem:
 
         # NOTE: dataframe will not well be ordered (e.g. 'id' is not the first)
         df = pd.DataFrame(query_to_dict(result_set))
-        df = df[['next_produce_date', 'next_produce_qty', 'available_qty', 'next_schedule_produce_qty', 'retail', 'pricing']]
+        #df = df[['next_produce_date', 'next_produce_qty', 'available_qty', 'next_schedule_produce_qty', 'retail', 'pricing']]
+        df = df[['next_produce_date', 'next_produce_qty', 'available_qty', 'next_schedule_produce_qty']]
 
         # we cant use NaN data, filling then with some default value
         df.fillna(-99999, inplace=True)

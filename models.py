@@ -41,21 +41,23 @@ class Hekman(base):
     __tablename__ = 'hekman'
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    model_number = Column(String(1024))
+    date = Column(String(64))
+    model_number = Column(String(64))
     description = Column(String(1024))
-    supply_for_days = Column(String(1024))
+    supply_for_days = Column(String(64))
     available_qty = Column(Integer)
     next_produce_qty = Column(Integer)
-    next_produce_date = Column(String(1024))
+    next_produce_date = Column(String(64))
     next_schedule_produce_qty = Column(Integer)
-    next_schedule_produce_date = Column(String(1024))
+    next_schedule_produce_date = Column(String(64))
     retail = Column(Integer)
     pricing = Column(Integer)
 
-    def __init__(self, model_number, description, supply_for_days,
+    def __init__(self, date, model_number, description, supply_for_days,
                  available_qty, next_produce_qty, next_produce_date,
                  next_schedule_produce_qty, next_schedule_produce_date,
                  retail, pricing):
+        self.date = date
         self.model_number = model_number
         self.description = description
         self.supply_for_days = supply_for_days
@@ -76,15 +78,17 @@ class HowardMiller(base):
     __tablename__ = 'howardMiller'
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    date = Column(String(64))
     model_number = Column(String(1024))
     stock_qty = Column(Integer)
-    next_available_date = Column(String(1024))
+    next_available_date = Column(String(64))
     next_qty = Column(Integer)
-    prod_date = Column(String(1024))
+    prod_date = Column(String(64))
     prod_quantity = Column(Integer)
 
-    def __init__(self, model_number, stock_qty, next_available_date,
+    def __init__(self, date, model_number, stock_qty, next_available_date,
                  next_qty, prod_date, prod_quantity):
+        self.date = date
         self.model_number = model_number
         self.stock_qty = stock_qty
         self.next_available_date = next_available_date

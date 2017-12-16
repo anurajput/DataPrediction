@@ -78,5 +78,5 @@ def smart_int(s):
 
 
 if __name__ == "__main__":
-    # print get_date_from_filename("20171213")
-    print date_str("20171213")
+    print "Date from filename is:", get_date_from_filename("20171213")
+    print "Date str:", date_str("20171213")
