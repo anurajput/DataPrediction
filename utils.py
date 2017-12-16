@@ -5,6 +5,7 @@ from sqlalchemy.inspection import inspect
 from random import randint
 import time
 from datetime import datetime
+from datetime import timedelta
 
 
 SLEEP_MIN = 1  # in seconds
@@ -94,8 +95,14 @@ def date_from_str(s):
     date_format = '%Y-%m-%d'
     return datetime.strptime(s, date_format)  
 
+def inc_day(d):
+    return d + timedelta(days=1)
+
 
 if __name__ == "__main__":
     #print "Date from filename is:", get_date_from_filename("20171213")
     #print "Date str:", date_str("20171213")
-    print "Days delta:", days_delta('2017-12-11', '2017-12-20')
+    #print "Days delta:", days_delta('2017-12-11', '2017-12-20')
+    d = date_from_str("2017-12-13")
+    nd = inc_day(d)
+    print "Next day:", nd.date()

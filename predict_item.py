@@ -13,6 +13,7 @@ import datetime
 import matplotlib.pyplot as plt
 from matplotlib import style
 import time
+import sys
 
 from models import Hekman, get_session
 from utils import query_to_dict, days_left_for_next_produce, date_from_str
@@ -94,18 +95,19 @@ class PredictItem:
         df['DL_F_NP'] = df.apply(lambda row: days_left_for_next_produce(row['next_produce_date'], row['date'], row['supply_for_days']), axis=1)
 
         # consumption rate = qty/days
-        #df['CR'] = (df['available_qty'])/ df['supply_for_days'] * 100.0
         df['CR'] = (df['available_qty']/ df['DL_F_NP']) * 100.0
 
         # production rate = next_produce_qty/DL_F_NP
         df['PR'] = (df['next_produce_qty']/ df['DL_F_NP']) * 100.0
 
+        # availability rate = next_produce_qty/DL_F_NP
+        df['AR'] = ( (df['available_qty'] + df['next_produce_qty'] ) / df['DL_F_NP']) * 100.0
+
         self.show_dataframe(df)
 
         #df = df[['supply_for_days', 'next_produce_qty', 'available_qty', 'DL_F_NP', 'CR', 'PR']]
-
-        #df = df[['supply_for_days', 'available_qty', 'DL_F_NP', 'CR', 'PR']]
-        df = df[['available_qty', 'DL_F_NP', 'CR', 'PR']]
+        #df = df[['supply_for_days', 'DL_F_NP', 'CR', 'PR']]
+        df = df[['available_qty', 'DL_F_NP', 'CR', 'PR', 'AR']]
 
         # Available <=> Next Produce Relation
         #df['A_NP_PCT'] = (df['next_produce_qty'] - df['available_qty'])/ df['next_produce_qty'] * 100.0
@@ -140,7 +142,9 @@ class PredictItem:
         y = np.array(self.df['label'])
 
         accuracy = -1.0
-        ACCURACY_THRESHOLD = .6
+        ACCURACY_THRESHOLD = .7
+        MIN_THRESHOLD = .25
+        attempt = 1
         while accuracy < ACCURACY_THRESHOLD:
             print "\n-- TRAINING CLASSIFIER WITH THRESHOLD : %f \n" % ACCURACY_THRESHOLD
             X_train, X_test, y_train, y_test = cross_validation.train_test_split(X, y, test_size=0.9)
@@ -150,6 +154,10 @@ class PredictItem:
             clf.fit(X_train, y_train)
             accuracy = clf.score(X_test, y_test)
             self.clf = clf
+
+            attempt += 1
+            if attempt % 10 == 0 and ACCURACY_THRESHOLD > MIN_THRESHOLD:
+                ACCURACY_THRESHOLD -= .05
 
         print "\n------------------------------------------"
         print "))---> Accuracy:", accuracy
@@ -180,13 +188,13 @@ class PredictItem:
             #next_unix+= one_day * 30 # add 30 days
             next_unix+= one_day
             #self.df.loc[next_date] = [np.nan for _ in range(len(self.df.columns)-1)] + [i]
-            self.df.loc[next_date] = i
+            self.df.loc[next_date.date()] = i
 
-        self.df[self.forecast_col].plot()
+        #self.df[self.forecast_col].plot()
         self.df['Forecast'].plot()
         plt.legend(loc=4)
         plt.xlabel('Date')
-        plt.ylabel('Availability')
+        plt.ylabel('Availability (%s)' % self.model_number)
         plt.show()
 
     def forecast(self):
@@ -209,10 +217,15 @@ class PredictItem:
         #self._log("visualizing the data")
         
         
-        
-if __name__ == "__main__":
-    # item to be predicted
-    model_number = "11100"
-    #model_number = "11101"
+def main():
+    if len(sys.argv) !=2:
+        print "\nError: model_number not specified\nUsage:-\n"
+        print "%s <model-number>\n" % sys.argv[0]
+        return
+
+    model_number = sys.argv[1]
     pi = PredictItem(model_number)
     pi.forecast()
+        
+if __name__ == "__main__":
+    main()
