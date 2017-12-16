@@ -5,7 +5,7 @@ from os import listdir
 from os.path import isfile, join
 import pandas as pd
 import shutil
-from utils import smart_int
+from utils import smart_int, date_str
 from models import Hekman, get_session
 from config import HECKMAN_CSV_DIR, HECKMAN_PROCESSED_CSV_DIR, INGEST_SLEEP
 
@@ -36,8 +36,8 @@ class IngestHekman(threading.Thread):
                 print index, row[0]
 
                 hekman = Hekman(row[0], row[1], row[2], smart_int(row[3]),
-                                smart_int(row[4]), row[5], smart_int(row[6]),
-                                row[7], smart_int(row[8]), smart_int(row[9]))
+                                smart_int(row[4]), date_str("%d" % row[5]), smart_int(row[6]),
+                                date_str("%d" % row[7]), smart_int(row[8]), smart_int(row[9]))
                 self._log(hekman)
                 session.add(hekman)
                 session.commit()

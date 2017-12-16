@@ -61,6 +61,9 @@ def get_date_from_filename(csv):
 
 
 def date_str(date):
+    if not len(date) == 8:
+        print "[WARNING] :: date_str() got invalid date:", date
+        return date
     year = date[:4]
     month = date[4:-2]
     month_date = date[-2:]
