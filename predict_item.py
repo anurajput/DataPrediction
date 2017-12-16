@@ -31,6 +31,34 @@ class PredictItem:
     def _log(self, msg):
         print "[PredictItem] :: %s" % msg
 
+    def show_result_set(self, result_set):
+        """
+        convenience fn to see contents of result_set
+        """
+        for query in result_set:
+
+            self._log('date: %s' % query.date)
+            self._log('model_number: %s' % query.model_number)
+            self._log('description: %s' % query.description)
+            self._log('supply_for_days: %s' % query.supply_for_days)
+            self._log('available_qty: %s' % query.available_qty)
+            self._log('next_produce_qty: %s' % query.next_produce_qty)
+            self._log('next_produce_date: %s' % query.next_produce_date)
+            self._log('next_schedule_produce_qty: %s' % query.next_schedule_produce_qty)
+            self._log('next_schedule_produce_date: %s' % query.next_schedule_produce_date)
+
+    def show_dataframe(self, dataframe):
+        for index, row in dataframe.iterrows():
+            print "%d -> %s" % (index, row)
+
+    def normalize_dataframe(self, dataframe):
+        dataframe['supply_for_days'].replace('S-0/15',  7, inplace=True)
+        dataframe['supply_for_days'].replace('S-15/30', 20, inplace=True)
+        dataframe['supply_for_days'].replace('S-30/60', 45, inplace=True)
+        dataframe['supply_for_days'].replace('S-60+',   65, inplace=True)
+        dataframe['supply_for_days'].replace('0',       0, inplace=True)
+        return dataframe
+
     def populate_dataframe(self):
         """
         function read all records for model_number and
@@ -41,31 +69,38 @@ class PredictItem:
         session = get_session()
 
         # query all records by model_number
-        #result_set = session.query(Hekman).all()
-        result_set = session.query(Hekman).filter(Hekman.model_number == self.model_number).all()
+        result_set = session.query(Hekman).filter(Hekman.model_number == self.model_number).order_by(Hekman.date).all()
+        self.show_result_set(result_set)
 
-        for query in result_set:
-
-            self._log('model_number: %s' % query.model_number)
-            self._log('description: %s' % query.description)
-            self._log('supply_for_days: %s' % query.supply_for_days)
-            self._log('available_qty: %s' % query.available_qty)
-            self._log('next_produce_qty: %s' % query.next_produce_qty)
-            self._log('next_produce_date: %s' % query.next_produce_date)
-            self._log('next_schedule_produce_qty: %s' %
-                 query.next_schedule_produce_qty)
-            self._log('next_schedule_produce_date: %s' %
-                 query.next_schedule_produce_date)
-            self._log('retail: %s' % query.retail)
-            self._log('pricing: %s' % query.pricing)
-
-        # NOTE: dataframe will not well be ordered (e.g. 'id' is not the first)
+        # note: dataframe will not well be ordered (e.g. 'id' is not the first)
         df = pd.DataFrame(query_to_dict(result_set))
-        #df = df[['next_produce_date', 'next_produce_qty', 'available_qty', 'next_schedule_produce_qty', 'retail', 'pricing']]
-        df = df[['next_produce_date', 'next_produce_qty', 'available_qty', 'next_schedule_produce_qty']]
+        #df = df[['date', 'next_produce_date', 'next_produce_qty', 'available_qty', 'next_schedule_produce_qty']]
+        #df = df[['next_produce_qty', 'available_qty', 'next_schedule_produce_qty']]
+        df = df[['supply_for_days', 'next_produce_qty', 'available_qty']]
+
+        df = self.normalize_dataframe(df)
+
+        #self.show_dataframe(df)
+
+        ###############################
+        #
+        # Define data relations here
+        #
+        ###############################
+
+        # consumption rate = qty/days
+        df['CR'] = (df['available_qty'])/ df['supply_for_days'] * 100.0
+
+        # Available <=> Next Produce Relation
+        #df['A_NP_PCT'] = (df['next_produce_qty'] - df['available_qty'])/ df['next_produce_qty'] * 100.0
+        #df['A_NP_PCT'] = (df['next_produce_qty'] - df['available_qty'])/ df['available_qty'] * 100.0
+
+        # Days left for next produce
+        #df['DL_NP'] = ???
 
         # we cant use NaN data, filling then with some default value
-        df.fillna(-99999, inplace=True)
+        #df.fillna(-99999, inplace=True)
+        df.dropna(inplace=True)
 
         self.df = df
 
@@ -74,7 +109,8 @@ class PredictItem:
     def create_classifier(self):
         self._log("defining classifier and training it")
 
-        forecast_col = 'available_qty'
+        #forecast_col = 'available_qty'
+        forecast_col = 'supply_for_days'
         forecast_out = int( math.ceil( 0.1 * len(self.df) ) )
 
         self.df['label'] = self.df[forecast_col].shift(-forecast_out)
@@ -97,7 +133,7 @@ class PredictItem:
         clf.fit(X_train, y_train)
         accuracy = clf.score(X_test, y_test)
 
-        print "accuracy:", accuracy
+        print "))---> Accuracy:", accuracy
 
         self.clf = clf
         self._log("classifier created and trained")
@@ -124,7 +160,7 @@ class PredictItem:
             next_unix+= one_day
             self.df.loc[next_date] = [np.nan for _ in range(len(self.df.columns)-1)] + [i]
 
-        self.df['available_qty'].plot()
+        self.df['supply_for_days'].plot()
         self.df['Forecast'].plot()
         plt.legend(loc=4)
         plt.xlabel('Date')
@@ -148,12 +184,12 @@ class PredictItem:
         
         # step-4
         # visualize the data
-        self._log("visualizing the data")
+        #self._log("visualizing the data")
         
         
         
 if __name__ == "__main__":
     # item to be predicted
-    model_number = "22503"
+    model_number = "11100"
     pi = PredictItem(model_number)
     pi.forecast()
