@@ -49,6 +49,7 @@ def sleep_timer(file_name):
 def log(tag, method_name, msg):
         print('[%s] :: %s :: %s' % (tag, method_name, msg))
 
+
 def get_date_from_filename(csv):
     sub = csv.split('.')
     x = sub[0]
@@ -58,6 +59,15 @@ def get_date_from_filename(csv):
     day = date[-2:]
     return "%s-%s-%s" % (year, month, day)
 
+
+def date_str(date):
+    year = date[:4]
+    month = date[4:-2]
+    month_date = date[-2:]
+    print 'date : %s-%s-%s' % (year, month, month_date)
+    return 'date : %s-%s-%s' % (year, month, month_date)
+
+
 def smart_int(s):
     try:
         return int(s)
@@ -66,4 +76,5 @@ def smart_int(s):
 
 
 if __name__ == "__main__":
-    print get_date_from_filename("abc20171213")
+    # print get_date_from_filename("20171213")
+    date_str("20171213")
