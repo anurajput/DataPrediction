@@ -94,6 +94,9 @@ class PredictItem:
 
         df['DL_F_NP'] = df.apply(lambda row: days_left_for_next_produce(row['next_produce_date'], row['date'], row['supply_for_days']), axis=1)
 
+        # we cant have 0 in DL_F_NP, or we will get divide by zero exception
+        df['DL_F_NP'].replace(0, 1, inplace=True)
+
         # consumption rate = qty/days
         df['CR'] = (df['available_qty']/ df['DL_F_NP']) * 100.0
 
