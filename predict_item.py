@@ -184,14 +184,20 @@ class PredictItem:
         one_day = 86400
         next_unix = last_unix + one_day
 
+        out_file = open("%s.csv" % self.model_number, "w")
+        out_file.write("Date,%s\n" % self.forecast_col)
+
         for i in forecast_set:
             next_date = datetime.datetime.fromtimestamp(next_unix)
-            print "next_date", next_date
+            #print "next_date", next_date
+            print "%s,%s" % (next_date.date(), math.floor(i) )
+            out_file.write( "%s,%s\n" % (next_date.date(), math.floor(i) ))
             
             #next_unix+= one_day * 30 # add 30 days
             next_unix+= one_day
             #self.df.loc[next_date] = [np.nan for _ in range(len(self.df.columns)-1)] + [i]
             self.df.loc[next_date.date()] = i
+        out_file.close()
 
         #self.df[self.forecast_col].plot()
         self.df['Forecast'].plot()
