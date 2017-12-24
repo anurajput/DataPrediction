@@ -90,31 +90,26 @@ class PredictItem:
 
         # relation-1
         # days left for next production of item
-        # next_produce_date - date
-
         df['DL_F_NP'] = df.apply(lambda row: days_left_for_next_produce(row['next_produce_date'], row['date'], row['supply_for_days']), axis=1)
 
         # we cant have 0 in DL_F_NP, or we will get divide by zero exception
         df['DL_F_NP'].replace(0, 1, inplace=True)
 
+        # relation-2
         # consumption rate = qty/days
         df['CR'] = (df['available_qty']/ df['DL_F_NP']) * 100.0
 
+        # relation-3
         # production rate = next_produce_qty/DL_F_NP
         df['PR'] = (df['next_produce_qty']/ df['DL_F_NP']) * 100.0
 
+        # relation-4
         # availability rate = next_produce_qty/DL_F_NP
         df['AR'] = ( (df['available_qty'] + df['next_produce_qty'] ) / df['DL_F_NP']) * 100.0
 
         self.show_dataframe(df)
 
-        #df = df[['supply_for_days', 'next_produce_qty', 'available_qty', 'DL_F_NP', 'CR', 'PR']]
-        #df = df[['supply_for_days', 'DL_F_NP', 'CR', 'PR']]
         df = df[['available_qty', 'DL_F_NP', 'CR', 'PR', 'AR']]
-
-        # Available <=> Next Produce Relation
-        #df['A_NP_PCT'] = (df['next_produce_qty'] - df['available_qty'])/ df['next_produce_qty'] * 100.0
-        #df['A_NP_PCT'] = (df['next_produce_qty'] - df['available_qty'])/ df['available_qty'] * 100.0
 
         # we cant use NaN data, filling then with some default value
         #df.fillna(-99999, inplace=True)
@@ -144,9 +139,15 @@ class PredictItem:
 
         y = np.array(self.df['label'])
 
+
+        ##########################################################
+        #                                                        #
+        #  TRAIN CLASSIFIER UNDER THRESHOLD ACCURACY IS OBTAINED #
+        #                                                        #
+        ##########################################################
         accuracy = -1.0
         ACCURACY_THRESHOLD = .7
-        MIN_THRESHOLD = .25
+        MIN_THRESHOLD = .45
         attempt = 1
         while accuracy < ACCURACY_THRESHOLD:
             print "\n-- TRAINING CLASSIFIER WITH THRESHOLD : %f \n" % ACCURACY_THRESHOLD
