@@ -124,7 +124,7 @@ class PredictItem:
 
         self.forecast_col = 'available_qty'
         #self.forecast_col = 'supply_for_days'
-        forecast_out = int( math.ceil( 0.1 * len(self.df) ) )
+        forecast_out = int( math.ceil( 0.5 * len(self.df) ) )
 
         self.df['label'] = self.df[self.forecast_col].shift(-forecast_out)
 
