@@ -91,6 +91,23 @@ def days_left_for_next_produce(next_produce_date, date, supply_for_days):
         print "[WARNING] :: days_left_for_next_produce(%s -> %s) got exception: %s" % (next_produce_date, date, exp)
         return supply_for_days
 
+def runs_out_before_next_stock(next_produce_date, date, supply_for_days):
+    try:
+        if next_produce_date == "0":
+            return 0
+        date_format = '%Y-%m-%d'
+        s = datetime.strptime(date, date_format)  
+        e = datetime.strptime(next_produce_date, date_format)  
+        no_of_days_left = e - s
+
+        if no_of_days_left > supply_for_days:
+            return 1
+        else:
+            return 0
+    except Exception as exp:
+        print "[WARNING] ::  runs_out_before_next_stock () got exception: %s" % exp
+        return 0
+
 def date_from_str(s):
     date_format = '%Y-%m-%d'
     return datetime.strptime(s, date_format)  

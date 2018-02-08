@@ -16,7 +16,7 @@ import time
 import sys
 
 from models import Hekman, get_session
-from utils import query_to_dict, days_left_for_next_produce, date_from_str
+from utils import query_to_dict, days_left_for_next_produce, date_from_str, runs_out_before_next_stock
 
 
 style.use('ggplot')
@@ -92,6 +92,9 @@ class PredictItem:
         # days left for next production of item
         df['DL_F_NP'] = df.apply(lambda row: days_left_for_next_produce(row['next_produce_date'], row['date'], row['supply_for_days']), axis=1)
 
+        # runs out before next stock
+        df['runs_out_before_next_stock'] = df.apply(lambda row: runs_out_before_next_stock(row['next_produce_date'], row['date'], row['supply_for_days']), axis=1)
+
         # we cant have 0 in DL_F_NP, or we will get divide by zero exception
         df['DL_F_NP'].replace(0, 1, inplace=True)
 
@@ -109,7 +112,8 @@ class PredictItem:
 
         self.show_dataframe(df)
 
-        df = df[['available_qty', 'DL_F_NP', 'CR', 'PR', 'AR']]
+        #df = df[['available_qty', 'DL_F_NP', 'CR', 'PR', 'AR']]  # available_qty
+        df = df[['supply_for_days', 'available_qty', 'DL_F_NP', 'CR', 'PR', 'AR', 'runs_out_before_next_stock']] # supply_for_days
 
         # we cant use NaN data, filling then with some default value
         #df.fillna(-99999, inplace=True)
@@ -122,8 +126,10 @@ class PredictItem:
     def create_classifier(self):
         self._log("defining classifier and training it")
 
-        self.forecast_col = 'available_qty'
+        #self.forecast_col = 'available_qty'
         #self.forecast_col = 'supply_for_days'
+        self.forecast_col = 'runs_out_before_next_stock'
+
         forecast_out = int( math.ceil( 0.5 * len(self.df) ) )
 
         self.df['label'] = self.df[self.forecast_col].shift(-forecast_out)
@@ -187,6 +193,8 @@ class PredictItem:
 
         out_file = open("%s.csv" % self.model_number, "w")
         out_file.write("Date,%s\n" % self.forecast_col)
+
+        # Item, Current Stock, Days Supply, Next In Stock, Run out before next stock
 
         for i in forecast_set:
             next_date = datetime.datetime.fromtimestamp(next_unix)
