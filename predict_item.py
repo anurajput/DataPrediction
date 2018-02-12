@@ -30,6 +30,7 @@ class PredictItem:
         self.df = None
         self.clf = None
         self.will_plot_data = will_plot_data
+        self.show_traceback = False
 
     def _log(self, msg):
         print "[PredictItem] :: %s" % msg
@@ -74,6 +75,8 @@ class PredictItem:
 
         # query all records by model_number
         result_set = session.query(Hekman).filter(Hekman.model_number == self.model_number).order_by(Hekman.date).all()
+
+        # convenience func to check a result_set
         #self.show_result_set(result_set)
 
         # note: dataframe will not well be ordered (e.g. 'id' is not the first)
@@ -119,7 +122,6 @@ class PredictItem:
         df = df[['DL_F_NP', 'CR', 'PR', 'AR', forecast_col]] # supply_for_days
 
         # we cant use NaN data, filling then with some default value
-        #df.fillna(-99999, inplace=True)
         df.dropna(inplace=True)
 
         self.df = df
@@ -172,6 +174,9 @@ class PredictItem:
             if attempt % 10 == 0 and ACCURACY_THRESHOLD > MIN_THRESHOLD:
                 ACCURACY_THRESHOLD -= .05
 
+            if attempt > 100:
+                break
+
         print "\n------------------------------------------"
         print "))---> Accuracy:", accuracy
         print "------------------------------------------\n"
@@ -200,7 +205,6 @@ class PredictItem:
 
         for i in forecast_set:
             next_date = datetime.datetime.fromtimestamp(next_unix)
-            #print "%s,%s" % (next_date.date(), math.floor(i) )
             out_file.write( "%s,%s\n" % (next_date.date(), math.floor(i) ))
             
             next_unix+= one_day
@@ -241,7 +245,8 @@ class PredictItem:
             except Exception as exp:
                 self._log("prediction of col '%s' failed with exception: \n%s" % (k, exp) )
                 print "----------------------------------------------------------------------------"
-                traceback.print_exc()
+                if self.show_traceback:
+                    traceback.print_exc()
                 print "----------------------------------------------------------------------------"
 
         self.merge_csv()
@@ -277,7 +282,8 @@ class PredictItem:
         except Exception as exp:
                 self._log("merge csv for item '%s' failed with exception: \n%s" % (self.model_number, exp) )
                 print "----------------------------------------------------------------------------"
-                traceback.print_exc()
+                if self.show_traceback:
+                    traceback.print_exc()
                 print "----------------------------------------------------------------------------"
         
         
