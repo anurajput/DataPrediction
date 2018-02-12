@@ -24,10 +24,11 @@ style.use('ggplot')
 
 class PredictItem:
 
-    def __init__(self, model_number):
+    def __init__(self, model_number, will_plot_data):
         self.model_number = model_number
         self.df = None
         self.clf = None
+        self.will_plot_data = will_plot_data
 
     def _log(self, msg):
         print "[PredictItem] :: %s" % msg
@@ -191,7 +192,10 @@ class PredictItem:
         one_day = 86400
         next_unix = last_unix + one_day
 
-        out_file = open("%s.csv" % self.model_number, "w")
+        # FIXME: ensure that output dir exists 
+        # else create it
+
+        out_file = open("output/%s.csv" % self.model_number, "w")
         out_file.write("Date,%s\n" % self.forecast_col)
 
         # Item, Current Stock, Days Supply, Next In Stock, Run out before next stock
@@ -210,10 +214,11 @@ class PredictItem:
 
         #self.df[self.forecast_col].plot()
         self.df['Forecast'].plot()
-        plt.legend(loc=4)
-        plt.xlabel('Date')
-        plt.ylabel('Availability (%s)' % self.model_number)
-        plt.show()
+        if self.will_plot_data:
+            plt.legend(loc=4)
+            plt.xlabel('Date')
+            plt.ylabel('Availability (%s)' % self.model_number)
+            plt.show()
 
     def forecast(self):
 
@@ -242,7 +247,7 @@ def main():
         return
 
     model_number = sys.argv[1]
-    pi = PredictItem(model_number)
+    pi = PredictItem(model_number, True)
     pi.forecast()
         
 if __name__ == "__main__":
