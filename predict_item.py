@@ -74,7 +74,7 @@ class PredictItem:
 
         # query all records by model_number
         result_set = session.query(Hekman).filter(Hekman.model_number == self.model_number).order_by(Hekman.date).all()
-        self.show_result_set(result_set)
+        #self.show_result_set(result_set)
 
         # note: dataframe will not well be ordered (e.g. 'id' is not the first)
         df = pd.DataFrame(query_to_dict(result_set))
@@ -112,7 +112,7 @@ class PredictItem:
         # availability rate = next_produce_qty/DL_F_NP
         df['AR'] = ( (df['available_qty'] + df['next_produce_qty'] ) / df['DL_F_NP']) * 100.0
 
-        self.show_dataframe(df)
+        #self.show_dataframe(df)
 
         #df = df[['available_qty', 'DL_F_NP', 'CR', 'PR', 'AR']]  # available_qty
         #df = df[['supply_for_days', 'available_qty', 'DL_F_NP', 'CR', 'PR', 'AR', 'runs_out_before_next_stock']] # supply_for_days
@@ -124,14 +124,11 @@ class PredictItem:
 
         self.df = df
 
-        print(self.df)
+        #print(self.df)
 
     def create_classifier(self, forecast_col):
-        self._log("defining classifier and training it")
+        #self._log("defining classifier and training it")
 
-        #self.forecast_col = 'available_qty'
-        #self.forecast_col = 'supply_for_days'
-        #self.forecast_col = 'runs_out_before_next_stock'
         self.forecast_col = forecast_col
 
         forecast_out = int( math.ceil( 0.5 * len(self.df) ) )
@@ -159,10 +156,10 @@ class PredictItem:
         ##########################################################
         accuracy = -1.0
         ACCURACY_THRESHOLD = .7
-        MIN_THRESHOLD = .25
+        MIN_THRESHOLD = .20
         attempt = 1
         while accuracy < ACCURACY_THRESHOLD:
-            print "\n-- TRAINING CLASSIFIER WITH THRESHOLD : %f \n" % ACCURACY_THRESHOLD
+            #print "\n-- TRAINING CLASSIFIER WITH THRESHOLD : %f \n" % ACCURACY_THRESHOLD
             X_train, X_test, y_train, y_test = cross_validation.train_test_split(X, y, test_size=0.9)
 
             clf = LinearRegression()
@@ -179,7 +176,7 @@ class PredictItem:
         print "))---> Accuracy:", accuracy
         print "------------------------------------------\n"
 
-        self._log("classifier created and trained")
+        #self._log("classifier created and trained")
 
         #FIXME - not sure if need to serialize this classifier,
         #in order to save time of training the classifier for each prediction of this item
@@ -187,11 +184,7 @@ class PredictItem:
     def predict_data(self, output_file_suffix):
         forecast_set = self.clf.predict(self.X_lately)
 
-        print "forecast_set", forecast_set
-
         self.df['Forecast'] = np.nan
-
-        self._log("last_date: %s" % self.last_date)
 
         last_unix = time.mktime(self.last_date.timetuple())
         one_day = 86400
@@ -207,11 +200,9 @@ class PredictItem:
 
         for i in forecast_set:
             next_date = datetime.datetime.fromtimestamp(next_unix)
-            #print "next_date", next_date
-            print "%s,%s" % (next_date.date(), math.floor(i) )
+            #print "%s,%s" % (next_date.date(), math.floor(i) )
             out_file.write( "%s,%s\n" % (next_date.date(), math.floor(i) ))
             
-            #next_unix+= one_day * 30 # add 30 days
             next_unix+= one_day
             #self.df.loc[next_date] = [np.nan for _ in range(len(self.df.columns)-1)] + [i]
             self.df.loc[next_date.date()] = i
@@ -230,6 +221,8 @@ class PredictItem:
 
         for k,v in predict_items.iteritems():
 
+            self._log("%s :: predicting '%s" % (self.model_number, k))
+
             try:
 
                 # step-1 : read all record for this item from db
@@ -242,7 +235,7 @@ class PredictItem:
         
                 # step-3
                 # predict the data for given time range, days/months etc
-                self._log("predicting '%s' for given time range, days/months etc" % k)
+                #self._log("predicting '%s' for given time range, days/months etc" % k)
                 self.predict_data(v)
 
             except Exception as exp:
@@ -272,7 +265,11 @@ class PredictItem:
             f5 = pd.merge(left=f4, right=f3, how='left', on='Date')
 
             # converting col. type to init
+            f5.supply_for_days = f5.supply_for_days.astype(int)
+            f5.available_qty = f5.available_qty.astype(int)
             f5.runs_out_before_next_stock = f5.runs_out_before_next_stock.astype(int)
+            f5['runs_out_before_next_stock'].replace(1, 'Y', inplace=True)
+            f5['runs_out_before_next_stock'].replace(0, 'N', inplace=True)
 
             # writing final output csv
             file_name = "output/%s-forecast.csv" % self.model_number

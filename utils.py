@@ -100,7 +100,7 @@ def runs_out_before_next_stock(next_produce_date, date, supply_for_days):
         e = datetime.strptime(next_produce_date, date_format)  
         no_of_days_left = e - s
 
-        if no_of_days_left > supply_for_days:
+        if no_of_days_left.days > supply_for_days:
             return 1
         else:
             return 0
