@@ -14,6 +14,7 @@ import matplotlib.pyplot as plt
 from matplotlib import style
 import time
 import sys
+import traceback
 
 from models import Hekman, get_session
 from utils import query_to_dict, days_left_for_next_produce, date_from_str, runs_out_before_next_stock
@@ -62,7 +63,7 @@ class PredictItem:
         dataframe['supply_for_days'].replace('NaN',     1, inplace=True)
         return dataframe
 
-    def populate_dataframe(self):
+    def populate_dataframe(self, forecast_col):
         """
         function read all records for model_number and
         fills the pandas dataframe
@@ -114,7 +115,8 @@ class PredictItem:
         self.show_dataframe(df)
 
         #df = df[['available_qty', 'DL_F_NP', 'CR', 'PR', 'AR']]  # available_qty
-        df = df[['supply_for_days', 'available_qty', 'DL_F_NP', 'CR', 'PR', 'AR', 'runs_out_before_next_stock']] # supply_for_days
+        #df = df[['supply_for_days', 'available_qty', 'DL_F_NP', 'CR', 'PR', 'AR', 'runs_out_before_next_stock']] # supply_for_days
+        df = df[['DL_F_NP', 'CR', 'PR', 'AR', forecast_col]] # supply_for_days
 
         # we cant use NaN data, filling then with some default value
         #df.fillna(-99999, inplace=True)
@@ -124,12 +126,13 @@ class PredictItem:
 
         print(self.df)
 
-    def create_classifier(self):
+    def create_classifier(self, forecast_col):
         self._log("defining classifier and training it")
 
         #self.forecast_col = 'available_qty'
         #self.forecast_col = 'supply_for_days'
-        self.forecast_col = 'runs_out_before_next_stock'
+        #self.forecast_col = 'runs_out_before_next_stock'
+        self.forecast_col = forecast_col
 
         forecast_out = int( math.ceil( 0.5 * len(self.df) ) )
 
@@ -137,6 +140,8 @@ class PredictItem:
 
         # Return new object with labels in requested axis removed
         X = np.array(self.df.drop(['label'], 1)) # axis=1
+
+        np.nan_to_num(1.0)
 
         X = preprocessing.scale(X)
         X = X[:-forecast_out]
@@ -154,7 +159,7 @@ class PredictItem:
         ##########################################################
         accuracy = -1.0
         ACCURACY_THRESHOLD = .7
-        MIN_THRESHOLD = .45
+        MIN_THRESHOLD = .25
         attempt = 1
         while accuracy < ACCURACY_THRESHOLD:
             print "\n-- TRAINING CLASSIFIER WITH THRESHOLD : %f \n" % ACCURACY_THRESHOLD
@@ -179,7 +184,7 @@ class PredictItem:
         #FIXME - not sure if need to serialize this classifier,
         #in order to save time of training the classifier for each prediction of this item
 
-    def predict_data(self):
+    def predict_data(self, output_file_suffix):
         forecast_set = self.clf.predict(self.X_lately)
 
         print "forecast_set", forecast_set
@@ -195,7 +200,7 @@ class PredictItem:
         # FIXME: ensure that output dir exists 
         # else create it
 
-        out_file = open("output/%s.csv" % self.model_number, "w")
+        out_file = open("output/%s-%s.csv" % (self.model_number, output_file_suffix), "w")
         out_file.write("Date,%s\n" % self.forecast_col)
 
         # Item, Current Stock, Days Supply, Next In Stock, Run out before next stock
@@ -221,23 +226,62 @@ class PredictItem:
             plt.show()
 
     def forecast(self):
+        predict_items = {"available_qty": "aq", "supply_for_days": "sfd", "runs_out_before_next_stock": "ro"}
 
-        # step-1 : read all record for this item from db
-        self.populate_dataframe()
-        assert len(self.df), "forecast cant be made without some data in dataframe"
+        for k,v in predict_items.iteritems():
 
-        # step-2: define classifier, train it
-        self.create_classifier()
-        assert self.clf, "forecast cant be made without a classifier"
+            try:
+
+                # step-1 : read all record for this item from db
+                self.populate_dataframe(k)
+                assert len(self.df), "forecast cant be made without some data in dataframe"
+
+                # step-2: define classifier, train it
+                self.create_classifier(k)
+                assert self.clf, "forecast of %s cant be made without a classifier" % k
         
-        # step-3
-        # predict the data for given time range, days/months etc
-        self._log("predicting the data for given time range, days/months etc")
-        self.predict_data()
+                # step-3
+                # predict the data for given time range, days/months etc
+                self._log("predicting '%s' for given time range, days/months etc" % k)
+                self.predict_data(v)
+
+            except Exception as exp:
+                self._log("prediction of col '%s' failed with exception: \n%s" % (k, exp) )
+                print "----------------------------------------------------------------------------"
+                traceback.print_exc()
+                print "----------------------------------------------------------------------------"
+
+        self.merge_csv()
+
+
         
         # step-4
         # visualize the data
         #self._log("visualizing the data")
+
+    def merge_csv(self):
+        try:
+            f2 = pd.read_csv('output/%s-sfd.csv' % self.model_number, usecols=['Date','supply_for_days'])
+            f1 = pd.read_csv('output/%s-aq.csv' % self.model_number, usecols=['Date', 'available_qty'])
+            f3 = pd.read_csv('output/%s-ro.csv' % self.model_number, usecols=['Date', 'runs_out_before_next_stock'])
+
+            # merging f1 and f2 on basis of 'Date' column
+            f4 = pd.merge(left=f1, right=f2, how='left', on='Date')
+
+            # merging f4 and f3 on basis of 'Date' column
+            f5 = pd.merge(left=f4, right=f3, how='left', on='Date')
+
+            # converting col. type to init
+            f5.runs_out_before_next_stock = f5.runs_out_before_next_stock.astype(int)
+
+            # writing final output csv
+            file_name = "output/%s-forecast.csv" % self.model_number
+            f5.to_csv(file_name)
+        except Exception as exp:
+                self._log("merge csv for item '%s' failed with exception: \n%s" % (self.model_number, exp) )
+                print "----------------------------------------------------------------------------"
+                traceback.print_exc()
+                print "----------------------------------------------------------------------------"
         
         
 def main():
@@ -247,7 +291,7 @@ def main():
         return
 
     model_number = sys.argv[1]
-    pi = PredictItem(model_number, True)
+    pi = PredictItem(model_number, False)
     pi.forecast()
         
 if __name__ == "__main__":

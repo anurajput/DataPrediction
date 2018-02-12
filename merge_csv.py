@@ -1,4 +1,5 @@
 import pandas as pd
+
 f2 = pd.read_csv('560140094-sfd.csv', usecols=['Date','supply_for_days'])
 f1 = pd.read_csv('560140094-aq.csv', usecols=['Date', 'available_qty'])
 f3 = pd.read_csv('560140094-ro.csv', usecols=['Date', 'runs_out_before_next_stock'])
