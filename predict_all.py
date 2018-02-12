@@ -12,11 +12,14 @@ class PredictAll:
 
     def process_all(self):
         for model_number in self.model_numbers:
-            print "======= Processing [ %s ] ============" % model_number
-            pi = PredictItem(model_number, False)
-            pi.forecast()
-            print
-            print
+            try:
+                print "======= Processing [ %s ] ============" % model_number
+                pi = PredictItem(model_number, False)
+                pi.forecast()
+                print
+                print
+            except Exception as exp:
+                print "[PredictAll] :: <%s> processing failed with exception: \n%s" % (model_number, exp)
 
 
 def main():
