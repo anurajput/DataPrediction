@@ -121,15 +121,15 @@ class PredictionResult(base):
     date = Column(String(64))
     model_number = Column(String(64))
     available_qty = Column(Integer)
-    suppy_for_days = Column(Integer)
+    supply_for_days = Column(Integer)
     runs_out_before_next_stock = Column(String(1))
 
-    def __init__(self, date, model_number, available_qty, suppy_for_days,
+    def __init__(self, date, model_number, available_qty, supply_for_days,
             runs_out_before_next_stock):
         self.date = date
         self.model_number = model_number
         self.available_qty = available_qty
-        self.suppy_for_days = suppy_for_days
+        self.supply_for_days = supply_for_days
         self.runs_out_before_next_stock = runs_out_before_next_stock
 
     def __repr__(self):
@@ -143,7 +143,7 @@ class PredictionResult(base):
             'id': self.id,
             'model_number': self.model_number,
             'available_qty': self.available_qty,
-            'suppy_for_days': self.suppy_for_days,
+            'supply_for_days': self.supply_for_days,
             'runs_out_before_next_stock': self.runs_out_before_next_stock
         }
 
