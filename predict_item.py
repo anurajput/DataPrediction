@@ -274,6 +274,7 @@ class PredictItem:
             f5.available_qty = f5.available_qty.astype(int)
             f5.runs_out_before_next_stock = f5.runs_out_before_next_stock.astype(int)
             f5['runs_out_before_next_stock'].replace(1, 'Y', inplace=True)
+            f5['runs_out_before_next_stock'].replace(-1, 'N', inplace=True)
             f5['runs_out_before_next_stock'].replace(0, 'N', inplace=True)
 
             # writing final output csv

@@ -113,6 +113,40 @@ class HowardMiller(base):
             'prod_quantity': self.prod_quantity
         }
 
+class PredictionResult(base):
+
+    __tablename__ = 'prediction_results'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    date = Column(String(64))
+    model_number = Column(String(64))
+    available_qty = Column(Integer)
+    suppy_for_days = Column(Integer)
+    runs_out_before_next_stock = Column(String(1))
+
+    def __init__(self, date, model_number, available_qty, suppy_for_days,
+            runs_out_before_next_stock):
+        self.date = date
+        self.model_number = model_number
+        self.available_qty = available_qty
+        self.suppy_for_days = suppy_for_days
+        self.runs_out_before_next_stock = runs_out_before_next_stock
+
+    def __repr__(self):
+        return "<Prediction> model_number: %s" % self.model_number
+
+    @property
+    def serialize(self):
+
+        """ Return object data in easily serializeable format"""
+        return {
+            'id': self.id,
+            'model_number': self.model_number,
+            'available_qty': self.available_qty,
+            'suppy_for_days': self.suppy_for_days,
+            'runs_out_before_next_stock': self.runs_out_before_next_stock
+        }
+
 
 def get_session():
     Session = sessionmaker(db)
