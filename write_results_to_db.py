@@ -8,6 +8,7 @@ from models import PredictionResult, get_session
 from os import listdir
 from os.path import isfile, join
 import pandas as pd
+import time
 
 import logging
 logger = logging.getLogger(__name__)
@@ -55,7 +56,7 @@ def show_row(row):
     logger.debug( "--- sdf [%s]" % sfd)
     logger.debug( "--- ro [%s]" % ro)
 
-def dump_csv_to_db(f):
+def dump_csv_to_db(f, start_time):
     session = get_session()
     try:
         path = "./output/%s" % f
@@ -68,9 +69,9 @@ def dump_csv_to_db(f):
             show_row(row)
             runs_out = row[4]
             print "-----------> runs_out = [%s] " % runs_out
-            if int(runs_out) < 0:
+            if not runs_out == "Y" and not runs_out == "N":
                 runs_out = "N"
-            pr = PredictionResult(row[1], model_number, int(row[2]), int(row[3]), row[4] )
+            pr = PredictionResult(row[1], model_number, int(row[2]), int(row[3]), runs_out )
             session.add(pr)
             session.commit()
             session.flush()
@@ -79,14 +80,20 @@ def dump_csv_to_db(f):
         logger.warn(traceback.format_exc())
     session.close()
 
+    print("Time elapsed: %0.2f secs" % (time.time() - start_time))
+
 
 def main():
     set_logger()
 
+    start_time = time.time()
+
     # get all forecast csv files
     forecast_files = get_forecast_files()
     for f in forecast_files:
-        dump_csv_to_db(f)
+        dump_csv_to_db(f, start_time)
+
+    print("Total Time taken: %0.2f secs" % (time.time() - start_time))
 
 
 if __name__ == '__main__':
