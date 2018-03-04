@@ -9,9 +9,17 @@ from os import listdir
 from os.path import isfile, join
 import pandas as pd
 import time
+import os
 
 import logging
 logger = logging.getLogger(__name__)
+
+def clear_colsole():
+    try:
+        # works well on linux, need to fix for windows
+        os.system('clear')
+    except:
+        pass
 
 def set_logger():
     level = logging.INFO
@@ -56,7 +64,7 @@ def show_row(row):
     logger.debug( "--- sdf [%s]" % sfd)
     logger.debug( "--- ro [%s]" % ro)
 
-def dump_csv_to_db(f, start_time):
+def dump_csv_to_db(f):
     session = get_session()
     try:
         path = "./output/%s" % f
@@ -68,10 +76,16 @@ def dump_csv_to_db(f, start_time):
                 continue
             show_row(row)
             runs_out = row[4]
-            print "-----------> runs_out = [%s] " % runs_out
             if not runs_out == "Y" and not runs_out == "N":
                 runs_out = "N"
-            pr = PredictionResult(row[1], model_number, int(row[2]), int(row[3]), runs_out )
+
+            sfd = 0
+            try:
+                sfd = int(row[3])
+            except:
+                log.warn("Model: %s, invalid supply_for_days: %s" % (model_number, row[3]))
+
+            pr = PredictionResult(row[1], model_number, int(row[2]), sfd, runs_out )
             session.add(pr)
             session.commit()
             session.flush()
@@ -79,8 +93,6 @@ def dump_csv_to_db(f, start_time):
         logger.warn('dump_csv_to_db() :: got Exception: %s' % exp)
         logger.warn(traceback.format_exc())
     session.close()
-
-    print("Time elapsed: %0.2f secs" % (time.time() - start_time))
 
 
 def main():
@@ -91,7 +103,8 @@ def main():
     # get all forecast csv files
     forecast_files = get_forecast_files()
     for f in forecast_files:
-        dump_csv_to_db(f, start_time)
+        clear_colsole()
+        dump_csv_to_db(f)
 
     print("Total Time taken: %0.2f secs" % (time.time() - start_time))
 
