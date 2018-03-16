@@ -27,7 +27,7 @@ def main():
         df.index = df.index + 1
 
         print "generating results.csv..."
-        df.to_csv("results.csv", index_label="#", sep='\t', encoding='utf-8')
+        df.to_csv("results.csv", index_label="#", sep=',', encoding='utf-8')
         
 
     except Exception as exp:
