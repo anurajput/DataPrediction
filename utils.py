@@ -52,6 +52,16 @@ def log(tag, method_name, msg):
         print('[%s] :: %s :: %s' % (tag, method_name, msg))
 
 
+def flog(msg):
+    """
+    utility func to write/append a msg to logs.txt file
+    """
+    f = open("logs.txt", "a")
+    f.write(msg)
+    f.write("\n")
+    f.close()
+
+
 def get_date_from_filename(csv):
     sub = csv.split('.')
     x = sub[0]
@@ -78,6 +88,7 @@ def smart_int(s):
     except:
         return 0
 
+
 def days_left_for_next_produce(next_produce_date, date, supply_for_days):
     try:
         if next_produce_date == "0":
@@ -90,6 +101,7 @@ def days_left_for_next_produce(next_produce_date, date, supply_for_days):
     except Exception as exp:
         print "[WARNING] :: days_left_for_next_produce(%s -> %s) got exception: %s" % (next_produce_date, date, exp)
         return supply_for_days
+
 
 def runs_out_before_next_stock(next_produce_date, date, supply_for_days):
     try:
@@ -108,18 +120,24 @@ def runs_out_before_next_stock(next_produce_date, date, supply_for_days):
         print "[WARNING] ::  runs_out_before_next_stock () got exception: %s" % exp
         return 0
 
+
 def date_from_str(s):
     date_format = '%Y-%m-%d'
     return datetime.strptime(s, date_format)  
+
 
 def inc_day(d):
     return d + timedelta(days=1)
 
 
-if __name__ == "__main__":
+def quick_tests():
     #print "Date from filename is:", get_date_from_filename("20171213")
     #print "Date str:", date_str("20171213")
     #print "Days delta:", days_delta('2017-12-11', '2017-12-20')
     d = date_from_str("2017-12-13")
     nd = inc_day(d)
     print "Next day:", nd.date()
+
+
+if __name__ == "__main__":
+    flog("testing...")
