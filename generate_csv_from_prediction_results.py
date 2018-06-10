@@ -1,6 +1,8 @@
 #
 # script generate a csv file from PredictionResult table of db
 #
+
+from sqlalchemy import asc
 import pandas as pd
 import traceback
 import time
@@ -15,7 +17,7 @@ def main():
 
         print "reading table PredictionResult from db..."
         # query all records from PredictionResult table
-        result_set = session.query(PredictionResult).all()
+        result_set = session.query(PredictionResult).order_by(asc(PredictionResult.date)).all()
 
         print "creating pandas dataframe..."
         # note: dataframe will not well be ordered (e.g. 'id' is not the first)
