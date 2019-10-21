@@ -5,7 +5,7 @@ cffi==1.11.2
 chardet==3.0.4
 cryptography==2.1.4
 cycler==0.10.0
-Django==1.11.11
+Django==1.11.23
 django-filter==1.1.0
 enum34==1.1.6
 idna==2.5
